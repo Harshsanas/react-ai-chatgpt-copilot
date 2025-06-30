@@ -1,12 +1,19 @@
 import React from "react";
 import MainContainer from "./components/MainContainer";
 import History from "./components/History";
+import Header from "./components/Header";
+import MobileMenu from "./components/MobileMenu";
 
 function App() {
   return (
-    <div className="grid grid-cols-5 h-screen bg-zinc-900 text-white">
-      <History />
-      <MainContainer />
+    <div className="flex flex-col h-screen bg-zinc-950 text-zinc-100">
+      <Header />
+      <div className="flex flex-1 overflow-hidden">
+        <History />
+        <div className="flex-1 flex flex-col overflow-hidden">
+          <MainContainer />
+        </div>
+      </div>
     </div>
   );
 }
