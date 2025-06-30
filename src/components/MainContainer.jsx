@@ -1,17 +1,66 @@
 import React, { useState } from "react";
+import { URL } from "../constants";
+import Answers from "./Answers";
 
 export default function MainContainer() {
   const [question, setQuestion] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const handleSubmit = (e) => {
+  const [result, setResult] = useState([]);
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
+
     if (!question.trim()) return;
+
     setIsLoading(true);
-    setTimeout(() => {
+
+    try {
+      const payload = {
+        contents: [
+          {
+            parts: [
+              {
+                text: question,
+              },
+            ],
+          },
+        ],
+      };
+
+      const response = await fetch(URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+      const data = await response.json();
+      let dataString = data?.candidates[0]?.content.parts[0].text;
+      dataString = dataString.split("* ");
+      dataString = dataString.map((item) => item.trim());
+      // setResult(dataString);
+      setResult([
+        ...result,
+        { type: "q", text: question },
+        { type: "a", text: dataString },
+      ]);
+      setQuestion("");
+    } catch (error) {
+      console.error("Error:", error);
+      setResult("Sorry, something went wrong. Please try again.");
+    } finally {
       setIsLoading(false);
-    }, 1500);
+    }
   };
 
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSubmit(e);
+    }
+  };
+
+  console.log(result);
   return (
     <div className="flex flex-col h-full">
       <div className="flex-1 overflow-y-auto px-4 py-6 space-y-4 md:px-8">
@@ -20,20 +69,37 @@ export default function MainContainer() {
             Hello! How can I assist you today?
           </div>
         </div>
-        <div className="flex justify-end">
-          <div className="bg-blue-600 p-4 rounded-2xl max-w-[90%] md:max-w-lg text-white">
-            What is React JS?
-          </div>
-        </div>
-        <div className="flex justify-start">
-          <div className="bg-zinc-800 p-4 rounded-2xl max-w-[90%] md:max-w-lg text-zinc-100">
-            React JS is a JavaScript library for building user interfaces. It's
-            maintained by Facebook and a community of developers.
-          </div>
-        </div>
+
+        <ul>
+          {result.map((item, index) =>
+            item.type === "q" ? (
+              <div className="flex justify-end" key={index + Math.random()}>
+                <div className="bg-blue-600 p-4 rounded-2xl max-w-[90%] rounded-tr-none md:max-w-lg text-white">
+                  <Answers ans={item.text} totalResult={1} index={index} />
+                </div>
+              </div>
+            ) : (
+              item.text.map((ansItem, ansIndex) => (
+                <div
+                  className="flex justify-start w-full"
+                  key={ansIndex + Math.random()}
+                >
+                  <div className="bg-zinc-800 p-4 rounded-2xl max-w-[90%] rounded-tl-none md:max-w-2xl text-zinc-100">
+                    <Answers
+                      ans={ansItem}
+                      totalResult={result.length}
+                      index={ansIndex}
+                    />
+                  </div>
+                </div>
+              ))
+            )
+          )}
+        </ul>
+
         {isLoading && (
           <div className="flex justify-start">
-            <div className="bg-zinc-800 p-4 rounded-2xl max-w-[90%] md:max-w-lg text-zinc-100">
+            <div className="bg-zinc-800 p-4 rounded-2xl max-w-[90%] rounded-tl-none md:max-w-lg text-zinc-100">
               <div className="flex space-x-1">
                 <div className="w-2 h-2 bg-zinc-400 rounded-full animate-pulse"></div>
                 <div className="w-2 h-2 bg-zinc-400 rounded-full animate-pulse delay-100"></div>
@@ -43,6 +109,7 @@ export default function MainContainer() {
           </div>
         )}
       </div>
+
       <div className="bg-zinc-900 border-t border-zinc-700 p-4">
         <form
           onSubmit={handleSubmit}
@@ -52,6 +119,7 @@ export default function MainContainer() {
             type="text"
             value={question}
             onChange={(e) => setQuestion(e.target.value)}
+            onKeyDown={handleKeyDown}
             placeholder="Ask me anything..."
             className="flex-grow bg-zinc-800 text-zinc-100 placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent border border-zinc-700 rounded-xl px-4 py-2 transition duration-200"
             disabled={isLoading}
