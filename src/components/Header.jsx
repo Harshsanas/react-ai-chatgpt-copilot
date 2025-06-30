@@ -4,7 +4,7 @@ import MobileMenu from "./MobileMenu";
 export default function Header() {
   return (
     <header className="bg-zinc-900 border-b border-zinc-700 w-full py-4 px-6 sticky top-0 z-50 shadow-sm">
-      <div className="max-w-7xl mx-auto flex justify-between items-center">
+      <div className="flex justify-between items-center">
         <h1 className="text-xl md:text-2xl font-bold text-zinc-100">
           AI Chat Assistant
         </h1>
