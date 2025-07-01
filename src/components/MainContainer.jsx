@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { URL } from "../constants";
 import Answers from "./Answers";
 
@@ -12,6 +12,16 @@ export default function MainContainer({
   const [question, setQuestion] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState([]);
+  const messagesEndRef = useRef(null);
+
+  // Scroll to bottom whenever result changes
+  useEffect(() => {
+    scrollToBottom();
+  }, [result, isLoading]);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
 
   useEffect(() => {
     if (currentConversationId) {
@@ -205,6 +215,8 @@ export default function MainContainer({
               );
             }
           })}
+          {/* Empty div to act as scroll anchor */}
+          <div ref={messagesEndRef} />
         </ul>
 
         {isLoading && (
