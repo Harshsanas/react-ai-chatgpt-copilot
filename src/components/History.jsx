@@ -35,7 +35,7 @@ export default function History({
                 {conversation.title}
               </span>
               <button
-                className="text-zinc-400 hover:text-red-500 transition duration-200 ml-2"
+                className="text-zinc-400 hover:text-red-500 transition duration-200 ml-2 cursor-pointer"
                 onClick={(e) => {
                   e.stopPropagation();
                   deleteConversation(conversation.id);
