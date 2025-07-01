@@ -1,56 +1,68 @@
-import React, { useState } from "react";
-import { FiAlignJustify, FiTrash, FiX } from "react-icons/fi";
+import React from "react";
+import { FiTrash, FiX } from "react-icons/fi";
 
-export default function MobileMenu() {
-  const [showHistory, setShowHistory] = useState(false);
-  const [conversations, setConversations] = useState([
-    "Getting started with React",
-    "CSS best practices",
-    "JavaScript interview questions",
-  ]);
-
-  const deleteConversation = (index) => {
-    setConversations(conversations.filter((_, i) => i !== index));
-  };
-
+export default function MobileMenu({
+  conversations = [], 
+  currentConversationId,
+  loadConversation,
+  deleteConversation,
+  createNewConversation,
+  onClose,
+}) {
   return (
-    <div className="md:hidden">
-      <button
-        onClick={() => setShowHistory(!showHistory)}
-        className="bg-zinc-800 p-3 rounded-full shadow-lg border border-zinc-700 hover:scale-105 transition duration-200"
-        aria-label={showHistory ? "Close history" : "Open history"}
-      >
-        {showHistory ? (
-          <FiX className="w-5 h-5 text-zinc-300 cursor-pointer" />
-        ) : (
-          <FiAlignJustify className="w-5 h-5 text-zinc-300 cursor-pointer" />
-        )}
-      </button>
+    <div className="fixed inset-0 bg-zinc-900 z-50 md:hidden">
+      <div className="p-4">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-lg font-semibold text-zinc-100">Conversations</h2>
+          <button onClick={onClose} className="text-zinc-400 hover:text-white">
+            <FiX className="w-6 h-6" />
+          </button>
+        </div>
 
-      {showHistory && (
-        <div className="absolute top-full right-0 mt-2 w-64 bg-zinc-800 rounded-lg shadow-xl border border-zinc-700 p-4 max-h-[70vh] overflow-y-auto">
-          <h2 className="font-semibold text-zinc-100 mb-3">Conversations</h2>
-          <ul className="space-y-2 cursor-pointer">
-            {conversations.map((title, index) => (
+        <button
+          onClick={() => {
+            createNewConversation();
+            onClose();
+          }}
+          className="w-full mb-4 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg"
+        >
+          New Conversation
+        </button>
+
+        {conversations.length === 0 ? (
+          <p className="text-zinc-400 text-center py-4">No conversations yet</p>
+        ) : (
+          <ul className="space-y-2">
+            {conversations.map((conversation) => (
               <li
-                key={index}
-                className="flex items-center justify-between bg-zinc-700 p-3 rounded-lg hover:bg-zinc-600 transition duration-200"
+                key={conversation.id}
+                className={`flex items-center justify-between p-3 rounded-lg transition duration-200 cursor-pointer ${
+                  currentConversationId === conversation.id
+                    ? "bg-zinc-700"
+                    : "bg-zinc-800"
+                }`}
+                onClick={() => {
+                  loadConversation(conversation.id);
+                  onClose();
+                }}
               >
-                <span className="text-zinc-200 truncate">{title}</span>
+                <span className="text-zinc-200 truncate flex-1">
+                  {conversation.title}
+                </span>
                 <button
+                  className="text-zinc-400 hover:text-red-500 transition duration-200 ml-2"
                   onClick={(e) => {
                     e.stopPropagation();
-                    deleteConversation(index);
+                    deleteConversation(conversation.id);
                   }}
-                  className="text-zinc-400 hover:text-red-500 transition duration-200 cursor-pointer"
                 >
                   <FiTrash className="w-4 h-4" />
                 </button>
               </li>
             ))}
           </ul>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }

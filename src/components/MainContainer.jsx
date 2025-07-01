@@ -1,15 +1,41 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { URL } from "../constants";
 import Answers from "./Answers";
 
-export default function MainContainer() {
+export default function MainContainer({
+  setShowMobileMenu,
+  conversations,
+  setConversations,
+  currentConversationId,
+  setCurrentConversationId,
+}) {
   const [question, setQuestion] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState([]);
 
+  useEffect(() => {
+    if (currentConversationId) {
+      const conversation = conversations.find(
+        (c) => c.id === currentConversationId
+      );
+      if (conversation) {
+        setResult(conversation.history);
+      }
+    } else {
+      setResult([]);
+    }
+  }, [currentConversationId, conversations]);
+
+  const updateConversationTitle = (id, newTitle) => {
+    const updatedConversations = conversations.map((c) =>
+      c.id === id ? { ...c, title: newTitle } : c
+    );
+    setConversations(updatedConversations);
+    localStorage.setItem("conversations", JSON.stringify(updatedConversations));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     if (!question.trim()) return;
 
     setIsLoading(true);
@@ -27,6 +53,22 @@ export default function MainContainer() {
         ],
       };
 
+      if (!currentConversationId) {
+        const newConversation = {
+          id: Date.now().toString(),
+          title: question,
+          history: [],
+          createdAt: new Date().toISOString(),
+        };
+        const updatedConversations = [newConversation, ...conversations];
+        setConversations(updatedConversations);
+        localStorage.setItem(
+          "conversations",
+          JSON.stringify(updatedConversations)
+        );
+        setCurrentConversationId(newConversation.id);
+      }
+
       const response = await fetch(URL, {
         method: "POST",
         headers: {
@@ -34,20 +76,47 @@ export default function MainContainer() {
         },
         body: JSON.stringify(payload),
       });
+
       const data = await response.json();
       let dataString = data?.candidates[0]?.content.parts[0].text;
-      dataString = dataString.split("* ");
-      dataString = dataString.map((item) => item.trim());
-      // setResult(dataString);
-      setResult([
+      dataString = dataString
+        .split("* ")
+        .map((item) => item.trim())
+        .filter(Boolean);
+
+      const newResult = [
         ...result,
         { type: "q", text: question },
         { type: "a", text: dataString },
-      ]);
+      ];
+
+      setResult(newResult);
       setQuestion("");
+
+      const updatedConversations = conversations.map((c) => {
+        if (c.id === currentConversationId) {
+          const title = c.history.length === 0 ? question : c.title;
+          return {
+            ...c,
+            title,
+            history: newResult,
+          };
+        }
+        return c;
+      });
+
+      setConversations(updatedConversations);
+      localStorage.setItem(
+        "conversations",
+        JSON.stringify(updatedConversations)
+      );
     } catch (error) {
       console.error("Error:", error);
-      setResult("Sorry, something went wrong. Please try again.");
+      setResult((prevResult) => [
+        ...prevResult,
+        { type: "q", text: question },
+        { type: "a", text: ["Sorry, something went wrong. Please try again."] },
+      ]);
     } finally {
       setIsLoading(false);
     }
@@ -60,10 +129,46 @@ export default function MainContainer() {
     }
   };
 
-  console.log(result);
   return (
     <div className="flex flex-col h-full">
+      <div className="md:hidden p-4">
+        <button
+          onClick={() => setShowMobileMenu(true)}
+          className="text-zinc-400 hover:text-white"
+        >
+          <svg
+            className="w-6 h-6"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M4 6h16M4 12h16M4 18h16"
+            ></path>
+          </svg>
+        </button>
+      </div>
+
       <div className="flex-1 overflow-y-auto px-4 py-6 space-y-4 md:px-8">
+        {currentConversationId && (
+          <div className="mb-4">
+            <input
+              type="text"
+              value={
+                conversations.find((c) => c.id === currentConversationId)
+                  ?.title || ""
+              }
+              onChange={(e) =>
+                updateConversationTitle(currentConversationId, e.target.value)
+              }
+              className="bg-transparent text-xl font-bold text-white focus:outline-none focus:border-b focus:border-blue-500 w-full"
+            />
+          </div>
+        )}
+
         <div className="flex justify-start">
           <div className="bg-zinc-800 p-4 rounded-2xl max-w-[90%] md:max-w-lg text-zinc-100">
             Hello! How can I assist you today?
@@ -71,30 +176,35 @@ export default function MainContainer() {
         </div>
 
         <ul>
-          {result.map((item, index) =>
-            item.type === "q" ? (
-              <div className="flex justify-end" key={index + Math.random()}>
-                <div className="bg-blue-600 p-4 rounded-2xl max-w-[90%] rounded-tr-none md:max-w-lg text-white">
-                  <Answers ans={item.text} totalResult={1} index={index} />
-                </div>
-              </div>
-            ) : (
-              item.text.map((ansItem, ansIndex) => (
-                <div
-                  className="flex justify-start w-full"
-                  key={ansIndex + Math.random()}
-                >
-                  <div className="bg-zinc-800 p-4 rounded-2xl max-w-[90%] rounded-tl-none md:max-w-2xl text-zinc-100">
-                    <Answers
-                      ans={ansItem}
-                      totalResult={result.length}
-                      index={ansIndex}
-                    />
+          {result.map((item, index) => {
+            if (item.type === "q") {
+              return (
+                <div className="flex justify-end mb-4" key={index}>
+                  <div className="bg-blue-600 p-4 rounded-2xl max-w-[90%] rounded-tr-none md:max-w-2xl text-white shadow-sm">
+                    {item.text}
                   </div>
                 </div>
-              ))
-            )
-          )}
+              );
+            } else {
+              const answers = Array.isArray(item.text)
+                ? item.text
+                : [item.text];
+              return (
+                <div className="flex justify-start w-full mb-4" key={index}>
+                  <div className="bg-zinc-800 p-4 rounded-2xl max-w-[90%] rounded-tl-none md:max-w-2xl text-zinc-100 shadow-sm space-y-2">
+                    {answers.map((ansItem, ansIndex) => (
+                      <Answers
+                        key={ansIndex}
+                        ans={ansItem}
+                        totalResult={answers.length}
+                        index={ansIndex}
+                      />
+                    ))}
+                  </div>
+                </div>
+              );
+            }
+          })}
         </ul>
 
         {isLoading && (
