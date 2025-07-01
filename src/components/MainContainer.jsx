@@ -185,47 +185,65 @@ export default function MainContainer({
           </div>
         </div>
 
-        <ul>
+        <ul className="space-y-6">
           {result.map((item, index) => {
             if (item.type === "q") {
               return (
-                <div className="flex justify-end mb-4" key={index}>
-                  <div className="bg-blue-600 p-4 rounded-2xl max-w-[90%] rounded-tr-none md:max-w-2xl text-white shadow-sm">
-                    {item.text}
+                <li key={index} className="flex justify-end">
+                  <div className="bg-blue-600 hover:bg-blue-700 transition-colors p-4 rounded-2xl max-w-[90%] rounded-tr-none md:max-w-2xl text-white shadow-lg">
+                    <div className="whitespace-pre-wrap break-words">
+                      {item.text}
+                    </div>
                   </div>
-                </div>
+                </li>
               );
             } else {
               const answers = Array.isArray(item.text)
                 ? item.text
                 : [item.text];
               return (
-                <div className="flex justify-start w-full mb-4" key={index}>
-                  <div className="bg-zinc-800 p-4 rounded-2xl max-w-[90%] rounded-tl-none md:max-w-2xl text-zinc-100 shadow-sm space-y-2">
-                    {answers.map((ansItem, ansIndex) => (
-                      <Answers
-                        key={ansIndex}
-                        ans={ansItem}
-                        totalResult={answers.length}
-                        index={ansIndex}
-                      />
-                    ))}
+                <li key={index} className="flex justify-start w-full">
+                  <div className="bg-zinc-800 hover:bg-zinc-750 transition-colors p-4 rounded-2xl max-w-[90%] rounded-tl-none md:max-w-2xl text-zinc-100 shadow-lg border border-zinc-700">
+                    <div className="space-y-4">
+                      {answers.map((ansItem, ansIndex) => (
+                        <div
+                          key={ansIndex}
+                          className={
+                            ansIndex > 0 ? "pt-4 border-t border-zinc-700" : ""
+                          }
+                        >
+                          <Answers
+                            ans={ansItem}
+                            totalResult={answers.length}
+                            index={ansIndex}
+                          />
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                </div>
+                </li>
               );
             }
           })}
           {/* Empty div to act as scroll anchor */}
           <div ref={messagesEndRef} />
         </ul>
-
         {isLoading && (
           <div className="flex justify-start">
-            <div className="bg-zinc-800 p-4 rounded-2xl max-w-[90%] rounded-tl-none md:max-w-lg text-zinc-100">
-              <div className="flex space-x-1">
-                <div className="w-2 h-2 bg-zinc-400 rounded-full animate-pulse"></div>
-                <div className="w-2 h-2 bg-zinc-400 rounded-full animate-pulse delay-100"></div>
-                <div className="w-2 h-2 bg-zinc-400 rounded-full animate-pulse delay-200"></div>
+            <div className="bg-zinc-800 p-4 rounded-2xl max-w-[90%] rounded-tl-none md:max-w-lg text-zinc-100 border border-zinc-700">
+              <div className="flex items-center space-x-2">
+                <div className="flex space-x-1">
+                  <div className="w-2 h-2 bg-zinc-400 rounded-full animate-bounce"></div>
+                  <div
+                    className="w-2 h-2 bg-zinc-400 rounded-full animate-bounce"
+                    style={{ animationDelay: "0.1s" }}
+                  ></div>
+                  <div
+                    className="w-2 h-2 bg-zinc-400 rounded-full animate-bounce"
+                    style={{ animationDelay: "0.2s" }}
+                  ></div>
+                </div>
+                <span className="text-sm text-zinc-400">AI is thinking...</span>
               </div>
             </div>
           </div>

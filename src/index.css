@@ -1,1 +1,41 @@
 @import "tailwindcss";
+@import 'katex/dist/katex.min.css';
+
+/* Additional styling for markdown content */
+.markdown-content {
+  line-height: 1.6;
+}
+
+.markdown-content p {
+  margin-bottom: 1rem;
+}
+
+.markdown-content ul, .markdown-content ol {
+  margin-bottom: 1rem;
+  padding-left: 2rem;
+}
+
+.markdown-content li {
+  margin-bottom: 0.5rem;
+}
+
+.markdown-content blockquote {
+  border-left: 4px solid #4b5563;
+  padding-left: 1rem;
+  margin-left: 0;
+  color: #9ca3af;
+  font-style: italic;
+}
+
+.markdown-content pre {
+  border-radius: 0.5rem;
+  margin: 1rem 0;
+  position: relative;
+}
+
+.markdown-content code:not([class*="language-"]) {
+  background-color: #374151;
+  padding: 0.2rem 0.4rem;
+  border-radius: 0.25rem;
+  font-size: 0.9em;
+}
